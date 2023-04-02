@@ -1,6 +1,6 @@
 const map = L.map('map'); //.setView([48.415, -109.733], 8)
-map.options.minZoom=7;
-map.options.maxZoom=12;
+map.options.minZoom = 7;
+map.options.maxZoom = 12;
 const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -32,11 +32,11 @@ function getRegionColor(region) {
         fillColor = "#81FF81";
     } else if (region == "Region 12") {
         fillColor = "#7FFFFE";
-    } 
+    }
     return fillColor;
 }
 
-var styleCounty =function(feature, layer){
+var styleCounty = function (feature, layer) {
     return {
         fillColor: getRegionColor(feature.properties.Region),
         fillOpacity: 1,
@@ -45,7 +45,7 @@ var styleCounty =function(feature, layer){
         opacity: 1,
     }
 }
-var styleRegion =function(){
+var styleRegion = function () {
     return {
         fillColor: "#fff",
         fillOpacity: 0,
@@ -54,7 +54,7 @@ var styleRegion =function(){
         opacity: 1,
     }
 }
-var styleState =function(){
+var styleState = function () {
     return {
         fillColor: "#fff",
         fillOpacity: 0,
@@ -76,7 +76,7 @@ var getMarkerStyle = function (feature) {
 
 };
 
-var eachCounty = function(feature, layer){
+var eachCounty = function (feature, layer) {
 
     layer.bindTooltip(layer.feature.properties.NAME, {
         permanent: true,
@@ -87,51 +87,87 @@ var eachCounty = function(feature, layer){
 
 }
 
-var eachRegion = function(feature, layer){
+var eachRegion = function (feature, layer) {
 
-    layer.bindTooltip(layer.feature.properties.Region, {
+    layer.bindTooltip(layer.feature.properties.Region1, {
         permanent: true,
         direction: "center",
         opacity: 1,
         className: 'region-label-tooltip'
     });
 
-}
-var onEachFeature = function (feature, layer) {
-
-    let html = "<b>" + feature.properties.StationID + "</b><br>";
-    html += "<b>Name: </b>" + feature.properties.StationName + "</b><br>";
-    html += "<b>Office: </b>" + feature.properties.StationOffice + "</b>";
-    layer.bindPopup(html);
+    let html = "<p style='text-align:center; border-bottom: 1px solid'><b>Event</b></p>";
+    html += "<b>" + feature.properties.Region + ", Iowa</b><br>";
+    html += "<b>Date: </b>" + feature.properties.Date + "</b><br>";
+    html += "<b>Time: </b>" + feature.properties.Time + "</b><br>";
+    html += "<b>Location: </b>" + feature.properties.Location + "</b>";
+    
+    var popup = L.popup();
+    popup.setContent(html);
+    layer.bindPopup(popup, popupOptions);
 
     layer.on('mouseover', function (e) {
-        this.openPopup();
+        var popup = e.target.getPopup();
+        popup.setLatLng(e.latlng).openOn(map);
+    });
+
+    layer.on('mousemove', function(e) {
+        popup.setLatLng(e.latlng).openOn(map);
     });
 
     layer.on('mouseout', function (e) {
-        this.closePopup();
+        e.target.closePopup();
     });
 
-    layer.on('click', function (e) {
-        window.open(feature.properties.webpage, '_blank');
-    })
 }
-let countyLayer = L.geoJSON(county, {
-    style: styleCounty,
-    onEachFeature: eachCounty,
-    // interactive: false
-}).addTo(map);
 
-let regionLayer = L.geoJSON(region, {
-    style: styleRegion,
-    onEachFeature: eachRegion,
-    interactive: false
-}).addTo(map);
+fetch('assets/data/IowaEvents.csv')
+    .then(response => response.text())
+    .then(csv => {
+        let lines = csv.split('\n');
+        let headers = lines[0].split(',');
+        headers =  headers.map(str => str.replace(new RegExp(' ', 'g'), ''));
+        headers =  headers.map(str => str.replace(new RegExp('\r', 'g'), ''));
+        let data = [];
 
-let stateLayer = L.geoJSON(state, {
-    style: styleState,
-    interactive: false
-    // onEachFeature
-}).addTo(map);
+        for (let i = 1; i < lines.length; i++) {
+            const obj = {};
+            const currentline = lines[i].split(',');
 
-map.fitBounds(stateLayer.getBounds());
+            for (let j = 0; j < headers.length; j++) {
+                obj[headers[j]] = currentline[j];
+            }
+
+            data.push(obj);
+        }
+
+        const regionJoin = region.features.map(feature => {
+            const dataObj = data.find(obj => obj.Region === feature.properties.Region1);
+            return { ...feature, properties: { ...feature.properties, ...dataObj } };
+        });
+
+        // console.log(regionJoin);
+
+        let countyLayer = L.geoJSON(county, {
+            style: styleCounty,
+            onEachFeature: eachCounty,
+            interactive: false
+        }).addTo(map);
+
+        let stateLayer = L.geoJSON(state, {
+            style: styleState,
+            interactive: false
+        }).addTo(map);
+
+        map.fitBounds(stateLayer.getBounds());
+
+        let regionLayer = L.geoJSON(regionJoin, {
+            style: styleRegion,
+            onEachFeature: eachRegion,
+        }).addTo(map);
+    })
+    .catch(error => {
+        console.error('Error fetching CSV file:', error);
+    });
+
+
