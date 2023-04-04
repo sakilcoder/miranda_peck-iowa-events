@@ -1,10 +1,12 @@
 const map = L.map('map'); //.setView([48.415, -109.733], 8)
-map.options.minZoom = 7;
+map.options.minZoom = 8;
 map.options.maxZoom = 12;
-const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
+
+var countyLayer;
+// const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+//     maxZoom: 19,
+//     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+// }).addTo(map);
 
 function getRegionColor(region) {
     let fillColor = "#7FFFFE";
@@ -101,7 +103,7 @@ var eachRegion = function (feature, layer) {
     html += "<b>Date: </b>" + feature.properties.Date + "</b><br>";
     html += "<b>Time: </b>" + feature.properties.Time + "</b><br>";
     html += "<b>Location: </b>" + feature.properties.Location + "</b>";
-    
+
     var popup = L.popup();
     popup.setContent(html);
     layer.bindPopup(popup, popupOptions);
@@ -111,7 +113,7 @@ var eachRegion = function (feature, layer) {
         popup.setLatLng(e.latlng).openOn(map);
     });
 
-    layer.on('mousemove', function(e) {
+    layer.on('mousemove', function (e) {
         popup.setLatLng(e.latlng).openOn(map);
     });
 
@@ -126,8 +128,8 @@ fetch('assets/data/IowaEvents.csv')
     .then(csv => {
         let lines = csv.split('\n');
         let headers = lines[0].split(',');
-        headers =  headers.map(str => str.replace(new RegExp(' ', 'g'), ''));
-        headers =  headers.map(str => str.replace(new RegExp('\r', 'g'), ''));
+        headers = headers.map(str => str.replace(new RegExp(' ', 'g'), ''));
+        headers = headers.map(str => str.replace(new RegExp('\r', 'g'), ''));
         let data = [];
 
         for (let i = 1; i < lines.length; i++) {
@@ -148,7 +150,7 @@ fetch('assets/data/IowaEvents.csv')
 
         // console.log(regionJoin);
 
-        let countyLayer = L.geoJSON(county, {
+        countyLayer = L.geoJSON(county, {
             style: styleCounty,
             onEachFeature: eachCounty,
             interactive: false
@@ -160,6 +162,7 @@ fetch('assets/data/IowaEvents.csv')
         }).addTo(map);
 
         map.fitBounds(stateLayer.getBounds());
+        map.setMaxBounds(stateLayer.getBounds());
 
         let regionLayer = L.geoJSON(regionJoin, {
             style: styleRegion,
@@ -171,3 +174,23 @@ fetch('assets/data/IowaEvents.csv')
     });
 
 
+    var visible;
+
+    // map.on('zoomend', function (e) {
+    //     console.log(countyLayer);
+    //   if (map.getZoom() > 8) {
+    //     if (!visible) {
+    //         countyLayer.eachLayer(function (layer) {
+    //         layer.showLabel();
+    //       });
+    //       visible = true;
+    //     }
+    //   } else {
+    //     if (visible) {
+    //         countyLayer.eachLayer(function (layer) {
+    //         layer.hideLabel();
+    //       });
+    //       visible = false;
+    //     }
+    //   }
+    // });

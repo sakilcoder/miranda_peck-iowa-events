@@ -44,6 +44,7 @@ body {
     font-size: 14px;
     font-weight: bold;
     text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+    margin-top: 28px;
     margin-left: 35px;
 }
 .county-label-tooltip{
