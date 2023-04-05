@@ -56,6 +56,15 @@ var styleRegion = function () {
         opacity: 1,
     }
 }
+var styleRegionPoint = function () {
+    return {
+        // fillColor: "#fff",
+        fillOpacity: 0,
+        color: "#000",
+        weight: 0,
+        opacity: 0,
+    }
+}
 var styleState = function () {
     return {
         fillColor: "#fff",
@@ -89,15 +98,15 @@ var eachCounty = function (feature, layer) {
 
 }
 
-var eachRegion = function (feature, layer) {
-
-    layer.bindTooltip(layer.feature.properties.Region1, {
+var eachRegionPoint = function (feature, layer) {
+    layer.bindTooltip(layer.feature.properties.Region, {
         permanent: true,
         direction: "center",
         opacity: 1,
         className: 'region-label-tooltip'
     });
-
+}
+var eachRegion = function (feature, layer) {
     let html = "<p style='text-align:center; border-bottom: 1px solid'><b>Event</b></p>";
     html += "<b>" + feature.properties.Region + ", Iowa</b><br>";
     html += "<b>Date: </b>" + feature.properties.Date + "</b><br>";
@@ -168,6 +177,20 @@ fetch('assets/data/IowaEvents.csv')
             style: styleRegion,
             onEachFeature: eachRegion,
         }).addTo(map);
+
+        var regionPointLayer = L.geoJSON(points, {
+            pointToLayer: function (feature, latlng) {
+                return L.marker(latlng, {
+                    opacity: 0
+                });
+            },
+            onEachFeature: eachRegionPoint
+        }).addTo(map);
+
+        // let regionPointLayer = L.geoJSON(points, {
+        //     style: styleRegionPoint,
+        //     onEachFeature: eachRegionPoint,
+        // }).addTo(map);
     })
     .catch(error => {
         console.error('Error fetching CSV file:', error);
