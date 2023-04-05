@@ -93,7 +93,8 @@ var eachCounty = function (feature, layer) {
         permanent: true,
         direction: "center",
         opacity: 1,
-        className: 'county-label-tooltip'
+        className: 'county-label-tooltip',
+        
     });
 
 }
