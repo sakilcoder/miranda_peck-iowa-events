@@ -1,5 +1,7 @@
-const map = L.map('map'); //.setView([48.415, -109.733], 8)
-map.options.minZoom = 8;
+const map = L.map('map', {
+    zoomSnap: 0.1
+}); //.setView([48.415, -109.733], 8)
+map.options.minZoom = 7.1;
 map.options.maxZoom = 12;
 
 var countyLayer;
@@ -94,7 +96,7 @@ var eachCounty = function (feature, layer) {
         direction: "center",
         opacity: 1,
         className: 'county-label-tooltip',
-        
+
     });
 
 }
@@ -132,6 +134,8 @@ var eachRegion = function (feature, layer) {
     });
 
 }
+
+
 
 fetch('assets/data/IowaEvents.csv')
     .then(response => response.text())
@@ -197,8 +201,22 @@ fetch('assets/data/IowaEvents.csv')
         console.error('Error fetching CSV file:', error);
     });
 
+// const sheetUrl = "https://docs.google.com/spreadsheets/d/1NqEBOQB5ao2iTmfekhOuPysM9YyVq-verZDSpL-5Mz8/values/Sheet1!A1:D13";
+// const spreadsheetId = '1NqEBOQB5ao2iTmfekhOuPysM9YyVq-verZDSpL-5Mz8';
+// const range = 'Sheet1!A1:D13';
 
-    var visible;
+// const url = `https://docs.google.com/spreadsheets/d/1NqEBOQB5ao2iTmfekhOuPysM9YyVq-verZDSpL-5Mz8/edit#gid=0`;
+
+// fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTiP5fbKHF0tC01JOcrdveSuKsIogqCl7vKF2t-cA8_6kSoJNjc8KxmCzuiD5MoWjZfWDBUYtAWLu40/pub?gid=0&single=true&output=csv')
+//   .then(response => {
+//     console.log(response);
+//   })
+  
+//   .catch(error => {
+//     console.error(error);
+//   });
+
+// var visible;
 
     // map.on('zoomend', function (e) {
     //     console.log(countyLayer);
