@@ -135,104 +135,49 @@ var eachRegion = function (feature, layer) {
 
 }
 
-
-
-fetch('assets/data/IowaEvents.csv')
-    .then(response => response.text())
-    .then(csv => {
-        let lines = csv.split('\n');
-        let headers = lines[0].split(',');
-        headers = headers.map(str => str.replace(new RegExp(' ', 'g'), ''));
-        headers = headers.map(str => str.replace(new RegExp('\r', 'g'), ''));
-        let data = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            const obj = {};
-            const currentline = lines[i].split(',');
-
-            for (let j = 0; j < headers.length; j++) {
-                obj[headers[j]] = currentline[j];
-            }
-
-            data.push(obj);
-        }
-
-        const regionJoin = region.features.map(feature => {
-            const dataObj = data.find(obj => obj.Region === feature.properties.Region1);
-            return { ...feature, properties: { ...feature.properties, ...dataObj } };
-        });
-
-        // console.log(regionJoin);
-
-        countyLayer = L.geoJSON(county, {
-            style: styleCounty,
-            onEachFeature: eachCounty,
-            interactive: false
-        }).addTo(map);
-
-        let stateLayer = L.geoJSON(state, {
-            style: styleState,
-            interactive: false
-        }).addTo(map);
-
-        map.fitBounds(stateLayer.getBounds());
-        map.setMaxBounds(stateLayer.getBounds());
-
-        let regionLayer = L.geoJSON(regionJoin, {
-            style: styleRegion,
-            onEachFeature: eachRegion,
-        }).addTo(map);
-
-        var regionPointLayer = L.geoJSON(points, {
-            pointToLayer: function (feature, latlng) {
-                return L.marker(latlng, {
-                    opacity: 0
-                });
-            },
-            onEachFeature: eachRegionPoint
-        }).addTo(map);
-
-        // let regionPointLayer = L.geoJSON(points, {
-        //     style: styleRegionPoint,
-        //     onEachFeature: eachRegionPoint,
-        // }).addTo(map);
-    })
-    .catch(error => {
-        console.error('Error fetching CSV file:', error);
+function addInfo(data) {
+    data = data.data;
+    // console.log(data);
+    const regionJoin = region.features.map(feature => {
+        const dataObj = data.find(obj => obj.Region === feature.properties.Region1);
+        return { ...feature, properties: { ...feature.properties, ...dataObj } };
     });
 
-// const sheetUrl = "https://docs.google.com/spreadsheets/d/1NqEBOQB5ao2iTmfekhOuPysM9YyVq-verZDSpL-5Mz8/values/Sheet1!A1:D13";
-// const spreadsheetId = '1NqEBOQB5ao2iTmfekhOuPysM9YyVq-verZDSpL-5Mz8';
-// const range = 'Sheet1!A1:D13';
+    // console.log(regionJoin);
 
-// const url = `https://docs.google.com/spreadsheets/d/1NqEBOQB5ao2iTmfekhOuPysM9YyVq-verZDSpL-5Mz8/edit#gid=0`;
+    countyLayer = L.geoJSON(county, {
+        style: styleCounty,
+        onEachFeature: eachCounty,
+        interactive: false
+    }).addTo(map);
 
-// fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTiP5fbKHF0tC01JOcrdveSuKsIogqCl7vKF2t-cA8_6kSoJNjc8KxmCzuiD5MoWjZfWDBUYtAWLu40/pub?gid=0&single=true&output=csv')
-//   .then(response => {
-//     console.log(response);
-//   })
-  
-//   .catch(error => {
-//     console.error(error);
-//   });
+    let stateLayer = L.geoJSON(state, {
+        style: styleState,
+        interactive: false
+    }).addTo(map);
 
-// var visible;
+    map.fitBounds(stateLayer.getBounds());
+    map.setMaxBounds(stateLayer.getBounds());
 
-    // map.on('zoomend', function (e) {
-    //     console.log(countyLayer);
-    //   if (map.getZoom() > 8) {
-    //     if (!visible) {
-    //         countyLayer.eachLayer(function (layer) {
-    //         layer.showLabel();
-    //       });
-    //       visible = true;
-    //     }
-    //   } else {
-    //     if (visible) {
-    //         countyLayer.eachLayer(function (layer) {
-    //         layer.hideLabel();
-    //       });
-    //       visible = false;
-    //     }
-    //   }
-    // });
+    let regionLayer = L.geoJSON(regionJoin, {
+        style: styleRegion,
+        onEachFeature: eachRegion,
+    }).addTo(map);
+
+    var regionPointLayer = L.geoJSON(points, {
+        pointToLayer: function (feature, latlng) {
+            return L.marker(latlng, {
+                opacity: 0
+            });
+        },
+        onEachFeature: eachRegionPoint
+    }).addTo(map);
+}
+
+let eventsURL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSSxYvjpCl88LF8GVJgYX_MBle_o5gRFu8aAxIkLJy_2CV7PM-dYIMWuWvixHmVBkLTMnU8rAMgHgLS/pub?gid=0&single=true&output=csv"
+Papa.parse(eventsURL, {
+    download: true,
+    header: true,
+    complete: addInfo,
+});
