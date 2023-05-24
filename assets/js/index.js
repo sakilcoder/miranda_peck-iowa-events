@@ -67,15 +67,15 @@ var styleRegionPoint = function () {
         opacity: 0,
     }
 }
-var styleState = function () {
-    return {
-        fillColor: "#fff",
-        fillOpacity: 0,
-        color: "#000",
-        weight: 4,
-        opacity: 1,
+    var styleState = function () {
+        return {
+            fillColor: "#fff",
+            fillOpacity: 0,
+            color: "#000",
+            weight: 4,
+            opacity: 1,
+        }
     }
-}
 var getMarkerStyle = function (feature) {
 
     return {
@@ -97,6 +97,29 @@ var eachCounty = function (feature, layer) {
         opacity: 1,
         className: 'county-label-tooltip',
 
+    });
+
+    let html = "<p style='text-align:center; border-bottom: 1px solid'><b>Event</b></p>";
+    html += "<b>" + feature.properties.NAME+ ', ' + feature.properties.Region + ", Iowa</b><br>";
+    html += "<b>Date: </b>" + feature.properties.Date + "</b><br>";
+    html += "<b>Time: </b>" + feature.properties.Time + "</b><br>";
+    html += "<b>Location: </b>" + feature.properties.Location + "</b>";
+
+    var popup = L.popup();
+    popup.setContent(html);
+    layer.bindPopup(popup, popupOptions);
+
+    layer.on('mouseover', function (e) {
+        var popup = e.target.getPopup();
+        popup.setLatLng(e.latlng).openOn(map);
+    });
+
+    layer.on('mousemove', function (e) {
+        popup.setLatLng(e.latlng).openOn(map);
+    });
+
+    layer.on('mouseout', function (e) {
+        e.target.closePopup();
     });
 
 }
@@ -143,12 +166,17 @@ function addInfo(data) {
         return { ...feature, properties: { ...feature.properties, ...dataObj } };
     });
 
+    const countyJoin = county.features.map(feature => {
+        const dataObj = data.find(obj => obj.Region === feature.properties.Region);
+        return { ...feature, properties: { ...feature.properties, ...dataObj } };
+    });
+
     // console.log(regionJoin);
 
-    countyLayer = L.geoJSON(county, {
+    countyLayer = L.geoJSON(countyJoin, {
         style: styleCounty,
         onEachFeature: eachCounty,
-        interactive: false
+        // interactive: false
     }).addTo(map);
 
     let stateLayer = L.geoJSON(state, {
@@ -156,12 +184,16 @@ function addInfo(data) {
         interactive: false
     }).addTo(map);
 
-    map.fitBounds(stateLayer.getBounds());
+    var paddingOptions = { padding: [50, 50] };
+    map.fitBounds(stateLayer.getBounds(), paddingOptions);
+
+    // map.fitBounds(stateLayer.getBounds());
     map.setMaxBounds(stateLayer.getBounds());
 
     let regionLayer = L.geoJSON(regionJoin, {
         style: styleRegion,
-        onEachFeature: eachRegion,
+        // onEachFeature: eachRegion,
+        interactive: false
     }).addTo(map);
 
     var regionPointLayer = L.geoJSON(points, {
