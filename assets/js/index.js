@@ -49,6 +49,12 @@ var styleCounty = function (feature, layer) {
         opacity: 1,
     }
 }
+var styleLee = function (feature, layer) {
+    return {
+        fillOpacity: 0,
+        opacity: 0,
+    }
+}
 var styleRegion = function () {
     return {
         fillColor: "#fff",
@@ -89,6 +95,37 @@ var getMarkerStyle = function (feature) {
 
 };
 
+var eachLee = function (feature, layer) {
+
+    // if(feature.properties.Location==null || feature.properties.Location==''){
+    //     return;
+    // }
+
+    let html = "<p style='text-align:center; border-bottom: 1px solid'><b>Event</b></p>";
+    html += "<b>" + feature.properties.NAME+ ', ' + feature.properties.Region + ", Iowa</b><br>";
+    html += "<b>Date: </b>" + feature.properties.Date + "</b><br>";
+    html += "<b>Time: </b>" + feature.properties.Time + "</b><br>";
+    html += "<b>Location: </b>" + feature.properties.Location + "</b>";
+
+    var popup = L.popup();
+    popup.setContent(html);
+    layer.bindPopup(popup, popupOptions);
+
+    layer.on('mouseover', function (e) {
+        var popup = e.target.getPopup();
+        popup.setLatLng(e.latlng).openOn(map);
+    });
+
+    layer.on('mousemove', function (e) {
+        popup.setLatLng(e.latlng).openOn(map);
+    });
+
+    layer.on('mouseout', function (e) {
+        e.target.closePopup();
+    });
+
+}
+
 var eachCounty = function (feature, layer) {
 
     layer.bindTooltip(layer.feature.properties.NAME, {
@@ -98,6 +135,10 @@ var eachCounty = function (feature, layer) {
         className: 'county-label-tooltip',
 
     });
+
+    if(feature.properties.Location==null || feature.properties.Location==''){
+        return;
+    }
 
     let html = "<p style='text-align:center; border-bottom: 1px solid'><b>Event</b></p>";
     html += "<b>" + feature.properties.NAME+ ', ' + feature.properties.Region + ", Iowa</b><br>";
@@ -132,6 +173,7 @@ var eachRegionPoint = function (feature, layer) {
         className: 'region-label-tooltip'
     });
 }
+
 var eachRegion = function (feature, layer) {
     let html = "<p style='text-align:center; border-bottom: 1px solid'><b>Event</b></p>";
     html += "<b>" + feature.properties.Region + ", Iowa</b><br>";
@@ -167,15 +209,26 @@ function addInfo(data) {
     });
 
     const countyJoin = county.features.map(feature => {
-        const dataObj = data.find(obj => obj.Region === feature.properties.Region);
+        const dataObj = data.find(obj => obj.County === feature.properties.NAME);
         return { ...feature, properties: { ...feature.properties, ...dataObj } };
     });
 
-    // console.log(regionJoin);
+    const leeJoin = lee.features.map(feature => {
+        const dataObj = data.find(obj => obj.County === feature.properties.NAME);
+        return { ...feature, properties: { ...feature.properties, ...dataObj } };
+    });
+
+    console.log(leeJoin);
 
     countyLayer = L.geoJSON(countyJoin, {
         style: styleCounty,
         onEachFeature: eachCounty,
+        // interactive: false
+    }).addTo(map);
+
+    leeLayer = L.geoJSON(leeJoin, {
+        style: styleLee,
+        onEachFeature: eachLee,
         // interactive: false
     }).addTo(map);
 
@@ -206,8 +259,9 @@ function addInfo(data) {
     }).addTo(map);
 }
 
+// "https://docs.google.com/spreadsheets/d/e/2PACX-1vSSxYvjpCl88LF8GVJgYX_MBle_o5gRFu8aAxIkLJy_2CV7PM-dYIMWuWvixHmVBkLTMnU8rAMgHgLS/pub?gid=0&single=true&output=csv"
 let eventsURL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSSxYvjpCl88LF8GVJgYX_MBle_o5gRFu8aAxIkLJy_2CV7PM-dYIMWuWvixHmVBkLTMnU8rAMgHgLS/pub?gid=0&single=true&output=csv"
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZB_gcUyeN92a9T3GHbWh7N4Uf8DbhYennxA1ukekQoKkNwSCtyKIYUjj1JrRK-fFJBRvFnPrlb43X/pub?output=csv"
 Papa.parse(eventsURL, {
     download: true,
     header: true,
